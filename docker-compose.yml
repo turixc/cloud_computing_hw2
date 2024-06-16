@@ -1,0 +1,71 @@
+version: "3.8" # version of compose format
+
+services:
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+
+  books-service:
+    build: ./books # path is relative to docker-compose-shorthand.yml location
+    restart: always # always restart the container
+    environment:
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+      - PORT=80
+    ports:
+      - "5001:80" # host:container
+    expose:
+      - 80
+    depends_on:
+      - "mongo"
+
+  loans-service:
+    build: ./loans # path is relative to docker-compose-shorthand.yml location
+    restart: always # always restart the container
+    volumes:
+      - type: bind
+        source: ./loans #host directory
+        target: /app # container directory
+    environment:
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+      - PORT=80
+    ports:
+      - "5002:80" # host:container
+    expose:
+      - 80
+    depends_on:
+      - "mongo"
+      - "books-service"
+
+  loans-service-2:
+    build: ./loans # path is relative to docker-compose-shorthand.yml location
+    restart: always # always restart the container
+    volumes:
+      - type: bind
+        source: ./loans #host directory
+        target: /app # container directory
+    environment:
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+      - PORT=80
+    ports:
+      - "5003:80" # host:container 
+    expose:
+      - 80
+    depends_on:
+      - "mongo"
+      - "books-service"
+
+  nginx:
+    build: ./nginx
+    restart: always # always restart the container
+    ports:
+      - "80:80" # host:container
+    expose:
+      - 80
+    depends_on:
+      - "books-service"
+      - "loans-service"
+      - "loans-service-2"
